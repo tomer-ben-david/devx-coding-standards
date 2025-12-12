@@ -6,10 +6,12 @@ This document covers Swift and SwiftUI-specific conventions. For general coding 
 
 ### State Management
 
-- **SwiftUI First**: Initialize and own core dependencies (Stores, Managers) in the `App` struct using `@StateObject`.
 - **MainActor by Default**: UI and Store coordination must occur on `@MainActor`. Background work must explicitly hop back via actors/clients.
+- Use `@StateObject` for owning dependencies in SwiftUI views
 
 ### Example: Composition Root in SwiftUI
+
+This demonstrates the general principle of initializing dependencies at the application root (see [general-conventions.md](./general-conventions.md#architecture--state)):
 
 ```swift
 @main
@@ -34,6 +36,8 @@ struct MyApp: App {
 ```
 
 ### Example: Dependency Injection in Swift
+
+This demonstrates the general dependency injection principles (see [general-conventions.md](./general-conventions.md#dependency-injection)):
 
 ```swift
 // Protocol for dependency
@@ -65,6 +69,8 @@ final class Service {
 ```
 
 ### Example: Fail-Fast Singleton Pattern
+
+This demonstrates the general singleton lifecycle pattern (see [general-conventions.md](./general-conventions.md#singleton-lifecycle)):
 
 ```swift
 final class Logger {

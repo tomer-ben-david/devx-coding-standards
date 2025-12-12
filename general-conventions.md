@@ -53,7 +53,7 @@ If the dependency is truly optional (feature flag, graceful degradation), docume
 
 ## Architecture & State
 
-- **Composition Root**: Wire up all dependencies in a single location (e.g., `App.init`) rather than scattering initialization logic.
+- **Composition Root**: Wire up all dependencies in a single location (e.g., `App.init`, `main()`, application entry point) rather than scattering initialization logic. Initialize and own core dependencies (Stores, Managers) at the application root.
 - **No Delegate Storage**: Avoid storing app state in delegates. Use delegates only for system lifecycle events, not as a dependency container.
 - **Static Helpers**: Avoid `static var` dependencies in helper enums/structs. Pass dependencies as method arguments (Method Injection) or convert the helper to an injectable service.
 
