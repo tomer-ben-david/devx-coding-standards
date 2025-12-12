@@ -6,24 +6,18 @@ A collection of coding standards and best practices for software development. Th
 
 This repository contains coding conventions and best practices that can be referenced and reused across projects. The standards are organized by language and topic, making it easy to find relevant guidelines for your project.
 
+## General Coding Conventions
+
+See [general-conventions.md](./general-conventions.md) for coding standards that apply to all programming languages. Examples use Swift syntax, but principles are language-agnostic.
+
 ## Swift / SwiftUI Conventions
 
-See [swift-conventions.md](./swift-conventions.md) for comprehensive Swift and SwiftUI coding standards.
+See [swift-conventions.md](./swift-conventions.md) for Swift and SwiftUI-specific patterns and examples. This extends the [general conventions](./general-conventions.md) with Swift-specific syntax and patterns.
 
 ## Commit Message Conventions
 
 See [commit-conventions.md](./commit-conventions.md) for commit message standards. We follow [Conventional Commits](https://www.conventionalcommits.org/) with `topic()` scope for work-in-progress features (e.g., `feat(topic): experimental feature`).
 
-## General Principles
-
-These principles apply across all languages and projects:
-
-- **DRY** (Don't Repeat Yourself): Ensure each piece of logic has a single representation.
-- **Immutability & Finality**: Prefer immutability where possible. Mark classes as `final` unless inheritance is required. Prefer value types over reference types.
-- **Constructors over Setters**: Prefer immutability and constructor initialization over setters unless setters genuinely make more sense for the use case.
-- **KISS** (Keep It Simple, Stupid): Prioritize simplicity and avoid over‑engineering.
-- **SOLID**: Apply the five SOLID principles for flexible architecture.
-- **YAGNI** (You Aren't Gonna Need It): Build only what is currently required.
 
 ## Usage
 
