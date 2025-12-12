@@ -12,7 +12,7 @@ See [swift-conventions.md](./swift-conventions.md) for comprehensive Swift and S
 
 ## Commit Message Conventions
 
-See [commit-conventions.md](./commit-conventions.md) for commit message standards following the [Conventional Commits](https://www.conventionalcommits.org/) specification, including the `topic()` scope convention for work-in-progress features.
+See [commit-conventions.md](./commit-conventions.md) for commit message standards. We follow [Conventional Commits](https://www.conventionalcommits.org/) with `topic()` scope for work-in-progress features (e.g., `feat(topic): experimental feature`).
 
 ## General Principles
 
