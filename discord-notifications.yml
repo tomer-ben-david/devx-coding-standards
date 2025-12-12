@@ -93,8 +93,8 @@ jobs:
           REVIEW_BODY_JSON: ${{ toJSON(github.event.review.body) }}
           COMMIT_MESSAGE_JSON: ${{ toJSON(github.event.head_commit.message) }}
           COMMITS_JSON: ${{ toJSON(github.event.commits) }}
-          DISCORD_WEBHOOK_URL: ${{ secrets[vars.DISCORD_WEBHOOK_SECRET_NAME || 'DISCORD_WEBHOOK_URL'] }}
-          SLACK_WEBHOOK_URL: ${{ secrets[vars.SLACK_WEBHOOK_SECRET_NAME || 'SLACK_WEBHOOK_URL'] }}
+          DISCORD_WEBHOOK_URL: ${{ vars.DISCORD_WEBHOOK_SECRET_NAME && secrets[vars.DISCORD_WEBHOOK_SECRET_NAME] || secrets.DISCORD_WEBHOOK_URL }}
+          SLACK_WEBHOOK_URL: ${{ vars.SLACK_WEBHOOK_SECRET_NAME && secrets[vars.SLACK_WEBHOOK_SECRET_NAME] || secrets.SLACK_WEBHOOK_URL }}
         run: |
           # Set variables
           EVENT_TYPE="${{ github.event_name }}"
