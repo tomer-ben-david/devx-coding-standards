@@ -13,11 +13,11 @@
 #    This file is kept in sync using git subtree. To pull the latest version:
 #
 #    1. Ensure the remote is configured:
-#       git remote add shared-githubworkflows https://github.com/tomer-ben-david/shared-github-workflows
+#       git remote add shared-github-workflows https://github.com/tomer-ben-david/shared-github-workflows
 #       (or use existing remote if already added)
 #
 #    2. Pull updates from the shared repo:
-#       git subtree pull --prefix .github/workflows shared-githubworkflows main --squash
+#       git subtree pull --prefix .github/workflows shared-github-workflows main --squash
 #
 #    3. Or use the centralized sync script:
 #       ~/dev/projects/2025-scripts/sync-subtrees.sh --pull

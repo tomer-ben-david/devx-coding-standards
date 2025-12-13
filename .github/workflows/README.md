@@ -19,9 +19,9 @@ This repository centralizes shared GitHub Actions workflows. Currently it contai
 Replace `<remote>` with the remote/URL for this repo (local path or GitHub remote) and run from a consumer repo.
 
 ```sh
-git remote add shared-githubworkflows <remote>
+git remote add shared-github-workflows <remote>
 # First add
-git subtree add --prefix .github/workflows shared-githubworkflows main --squash
+git subtree add --prefix .github/workflows shared-github-workflows main --squash
 # To pull updates later
-git subtree pull --prefix .github/workflows shared-githubworkflows main --squash
+git subtree pull --prefix .github/workflows shared-github-workflows main --squash
 ```
