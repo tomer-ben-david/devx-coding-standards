@@ -27,13 +27,13 @@ Reference these conventions in your project README:
 ## Coding Standards
 
 This project follows the coding conventions defined in:
-https://github.com/tomer-ben-david/2025-coding-standards
+https://github.com/tomer-ben-david/shared-coding-standards
 ```
 
 Or link to specific sections:
 
 ```markdown
-See our [Swift coding conventions](https://github.com/tomer-ben-david/2025-coding-standards/blob/main/swift-conventions.md).
+See our [Swift coding conventions](https://github.com/tomer-ben-david/shared-coding-standards/blob/main/swift-conventions.md).
 ```
 
 ## Contributing
