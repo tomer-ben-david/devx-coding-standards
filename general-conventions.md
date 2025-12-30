@@ -69,6 +69,7 @@ If the dependency is truly optional (feature flag, graceful degradation), docume
 - **Exceptions for Exceptional Cases**: Use exceptions only for exceptional/error conditions, not for normal business flow (e.g., account_inactive, channel not found). Prefer result types or optionals for expected business cases.
 - **Propagate Errors**: Do not catch errors internally unless you can fully recover from them. Let them throw to the caller.
 - **Avoid Generic Catch**: Avoid `catch { print(error) }`. If you catch, handle specific errors or rethrow.
+- **Fail Loud by Default**: Prefer fast, explicit failures. Do not add silent fallbacks or degradation paths unless explicitly required.
 
 ## Logging & Observability
 
