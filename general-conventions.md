@@ -79,6 +79,7 @@ If the dependency is truly optional (feature flag, graceful degradation), docume
 ## Concurrency
 
 - **Explicit Threading**: Be explicit about which thread/actor context code runs on. Background work must explicitly hop back to the main/UI thread when needed.
+- **No Sleep-Based Coordination**: Avoid `sleep`/`Thread.sleep` for readiness or sequencing; wait on deterministic signals instead.
 
 ## Bug Fixing
 
@@ -88,6 +89,7 @@ If the dependency is truly optional (feature flag, graceful degradation), docume
 
 ## General Principles
 
+- **Leave Code Better**: Always leave the code in a better state than you found it—refactor surrounding code for maintainability while fixing bugs or adding features.
 - **DRY** (Don't Repeat Yourself): Ensure each piece of logic has a single representation.
 - **Immutability & Finality**: Prefer immutability where possible. Mark classes as `final` unless inheritance is required. Prefer value types over reference types where applicable.
 - **Constructors over Setters**: Prefer immutability and constructor initialization over setters unless setters genuinely make more sense for the use case.
