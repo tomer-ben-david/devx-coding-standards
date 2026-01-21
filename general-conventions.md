@@ -94,5 +94,6 @@ If the dependency is truly optional (feature flag, graceful degradation), docume
 - **Immutability & Finality**: Prefer immutability where possible. Mark classes as `final` unless inheritance is required. Prefer value types over reference types where applicable.
 - **Constructors over Setters**: Prefer immutability and constructor initialization over setters unless setters genuinely make more sense for the use case.
 - **KISS** (Keep It Simple, Stupid): Prioritize simplicity and avoid over‑engineering.
+- **Simplicity over Caching**: Prefer clear, minimal state and derive from source-of-truth data when possible, even if it costs some performance. Use caches/indexes only when they provide clear, measured value.
 - **SOLID**: Apply the five SOLID principles for flexible architecture.
 - **YAGNI** (You Aren't Gonna Need It): Build only what is currently required.
