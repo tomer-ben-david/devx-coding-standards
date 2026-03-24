@@ -2,6 +2,8 @@
 
 These coding conventions apply to all programming languages. Examples shown use Swift syntax, but the principles are language-agnostic.
 
+- **Structural Fixes not patches** - When you fix something do structural fix or edits not patches.
+
 ## Dependency Injection
 
 ### Prefer Dependency Injection
@@ -57,6 +59,10 @@ If the dependency is truly optional (feature flag, graceful degradation), docume
 - **No Delegate Storage**: Avoid storing app state in delegates. Use delegates only for system lifecycle events, not as a dependency container.
 - **Static Helpers**: Avoid `static var` dependencies in helper enums/structs. Pass dependencies as method arguments (Method Injection) or convert the helper to an injectable service.
 
+## Type Safety & State Machines
+
+- Prefer stronger type safety (for example sealed/union types and exhaustive matching) so invalid states or unhandled transitions fail at compile time whenever practical.
+
 ## Data Modeling
 
 - **Domain-Driven**: Use explicit types for domain concepts (e.g., `User`, `Order`) instead of primitives or dictionaries.
@@ -64,10 +70,18 @@ If the dependency is truly optional (feature flag, graceful degradation), docume
 - **Centralized Definitions**: Define shared data models in a dedicated `Models/` directory, not nested inside other types or service files.
 - **Serialization**: Prefer built-in serialization mechanisms (e.g., `Codable` in Swift, `Serializable` in Java) for data models to simplify logging, debugging, and persistence.
 
+## Migrations Policy
+
+- **No Migrations by Default (Pre-Launch)**: Assume there are no real users yet unless explicitly stated otherwise. Do not add schema/data/state migrations by default.
+- **Ask for Explicit Confirmation First**: Before adding any migration logic, ask the owner for explicit confirmation.
+- **Prefer Clean Replacement Early**: In pre-launch projects, prefer direct model/schema replacement over compatibility shims.
+- **No Silent Compatibility Paths**: Do not add hidden auto-migration, legacy enum remapping, or backward-compatibility fallbacks unless explicitly approved.
+
 ## Error Handling
 
 - **Exceptions for Exceptional Cases**: Use exceptions only for exceptional/error conditions, not for normal business flow (e.g., account_inactive, channel not found). Prefer result types or optionals for expected business cases.
 - **Propagate Errors**: Do not catch errors internally unless you can fully recover from them. Let them throw to the caller.
+- **Cleanup Without Recovery**: Use `finally`/`defer` only for mandatory cleanup (for example locks, in-flight maps, temp resources). Do not swallow or transform the original failure; let it propagate.
 - **Avoid Generic Catch**: Avoid `catch { print(error) }`. If you catch, handle specific errors or rethrow.
 - **Fail Loud by Default**: Prefer fast, explicit failures. Do not add silent fallbacks or degradation paths unless explicitly required.
 
@@ -85,6 +99,9 @@ If the dependency is truly optional (feature flag, graceful degradation), docume
 
 - **Root Cause Analysis**: Before fixing a bug, read the whole codebase or larger areas around the bug. Understand the full flow before applying a fix.
 - **No Patches**: Avoid quick workarounds that treat symptoms. Find and fix the root cause.
+- **Prefer Structural Fixes When Needed**: If the root cause is architectural (state ownership, idempotency model, coupling, lifecycle boundaries), include the minimal refactor that removes the failure mode instead of adding guards around symptoms.
+- **Encode the Invariant in Code**: After fixing the root cause, make the invariant explicit in code paths (for example single terminal responder, idempotency conflict checks, typed state transitions) so the same class of bug cannot silently reappear.
+- **Type-Safety Check Per Bug**: For each bug fix, explicitly evaluate whether stronger types (for example constrained value objects, sealed unions, or exhaustive matching) can prevent the same bug class from recurring.
 - **Deduce, Don't Store**: Prefer deducing state from the source of truth rather than caching/storing state that can become stale. If a value can be computed from existing data, compute it.
 
 ## General Principles
