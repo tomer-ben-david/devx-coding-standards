@@ -18,6 +18,9 @@ See [swift-conventions.md](./swift-conventions.md) for Swift and SwiftUI-specifi
 
 See [commit-conventions.md](./commit-conventions.md) for commit message standards. We follow [Conventional Commits](https://www.conventionalcommits.org/) with `topic()` scope for work-in-progress features (e.g., `feat(topic): experimental feature`).
 
+## Repository Diagnostics
+
+See the **Repository Diagnostics** section in [general-conventions.md](./general-conventions.md#repository-diagnostics) for a list of Git commands to run when first exploring a codebase. These help identify churn hotspots, bug clusters, and bus factors before you even open a file.
 
 ## Usage
 

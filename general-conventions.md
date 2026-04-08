@@ -95,6 +95,21 @@ If the dependency is truly optional (feature flag, graceful degradation), docume
 - **Explicit Threading**: Be explicit about which thread/actor context code runs on. Background work must explicitly hop back to the main/UI thread when needed.
 - **No Sleep-Based Coordination**: Avoid `sleep`/`Thread.sleep` for readiness or sequencing; wait on deterministic signals instead.
 
+## Repository Diagnostics
+
+Before reading a single file in a new codebase, use these diagnostic commands to understand the project's health and hotspots.
+
+- **High Churn Hotspots**: Identify the most frequently changed files (often where technical debt clusters).
+  `git log --format=format: --name-only --since="1 year ago" | sort | uniq -c | sort -nr | head -20`
+- **Authorship & Bus Factor**: Map out key contributors and potential knowledge silos.
+  `git shortlog -sn --no-merges`
+- **Bug Clusters**: Locating files with the highest density of bug-related fixes.
+  `git log -i -E --grep="fix|bug|broken" --name-only --format='' | sort | uniq -c | sort -nr | head -20`
+- **Project Momentum**: Commit count by month to scan for declining rhythm or spikes.
+  `git log --format='%ad' --date=format:'%Y-%m' | sort | uniq -c`
+- **Stability & Firefighting**: Frequency of reverts and hotfixes (indicates trust in the deploy process).
+  `git log --oneline --since="1 year ago" | grep -iE 'revert|hotfix|emergency|rollback'`
+
 ## Bug Fixing
 
 - **Root Cause Analysis**: Before fixing a bug, read the whole codebase or larger areas around the bug. Understand the full flow before applying a fix.
