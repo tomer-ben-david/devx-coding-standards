@@ -1,8 +1,15 @@
 # General Coding Conventions
 
-These coding conventions apply to all programming languages. Examples shown use Swift syntax, but the principles are language-agnostic.
+These coding conventions apply to all programming languages. The core philosophy is to build robust, maintainable systems by prioritizing deep architectural integrity over surface-level fixes.
 
-- **Structural Fixes not patches** - When you fix something do structural fix or edits not patches.
+## Core Philosophy: Structural Fixes over Patches
+
+**We always prefer structural fixes and root cause analysis over patches.** This applies to all edits, not just bug fixes.
+
+- **No Symptoms**: Do not treat symptoms (e.g., adding a null check, a catch block, or a guard clause).
+- **Fix the Root**: Find the underlying architectural reason why a failure is possible (e.g., state ownership, lifecycle mismatch, coupling) and fix it at the source.
+- **Encode Invariants**: Once fixed, encode the invariant in the type system or architecture so the failure mode becomes impossible to represent.
+- **Leave it Better**: Every edit is an opportunity to improve the structure. If you find a patch, replace it with a structural fix.
 
 ## Dependency Injection
 
@@ -52,6 +59,8 @@ If the dependency is truly optional (feature flag, graceful degradation), docume
 ## Testing Philosophy
 
 - **Local E2E**: Prefer integration-style tests that exercise full flows (e.g., ViewModel → Service → Client) using in-memory fakes. Avoid testing implementation details; test user-facing behavior.
+- **Do Not Mirror Production Models in Tests**: Tests should not define parallel DTOs, schemas, summaries, or field lists that duplicate production models/read APIs. Prefer production readers/selectors and infer fixture return types from builders or seed functions so production field changes fail in one obvious place.
+- **Builder Defaults over Fixture Dumps**: For deterministic test data, use small builders with clear defaults and targeted overrides instead of large static JSON blobs or repeated object literals. Builders should create only source facts; production code should still derive keys, links, fingerprints, deduplication, and enriched state.
 
 ## Architecture & State
 
@@ -112,16 +121,16 @@ Before reading a single file in a new codebase, use these diagnostic commands to
 
 ## Bug Fixing
 
+Align all bug fixing with the **Core Philosophy: Structural Fixes over Patches**.
+
 - **Root Cause Analysis**: Before fixing a bug, read the whole codebase or larger areas around the bug. Understand the full flow before applying a fix.
-- **No Patches**: Avoid quick workarounds that treat symptoms. Find and fix the root cause.
-- **Prefer Structural Fixes When Needed**: If the root cause is architectural (state ownership, idempotency model, coupling, lifecycle boundaries), include the minimal refactor that removes the failure mode instead of adding guards around symptoms.
-- **Encode the Invariant in Code**: After fixing the root cause, make the invariant explicit in code paths (for example single terminal responder, idempotency conflict checks, typed state transitions) so the same class of bug cannot silently reappear.
-- **Type-Safety Check Per Bug**: For each bug fix, explicitly evaluate whether stronger types (for example constrained value objects, sealed unions, or exhaustive matching) can prevent the same bug class from recurring.
 - **Deduce, Don't Store**: Prefer deducing state from the source of truth rather than caching/storing state that can become stale. If a value can be computed from existing data, compute it.
+- **Type-Safety Check**: For each fix, evaluate whether stronger types (e.g., constrained value objects, sealed unions) can prevent the same bug class from recurring.
 
 ## General Principles
 
 - **Leave Code Better**: Always leave the code in a better state than you found it—refactor surrounding code for maintainability while fixing bugs or adding features.
+- **Reviewable Change Sets**: Keep each PR small and focused. If a change is functionally correct but adds unrelated refactors, extra fallbacks, or behavior that is not needed for the stated fix, trim it so the review surface stays clear.
 - **DRY** (Don't Repeat Yourself): Ensure each piece of logic has a single representation.
 - **Immutability & Finality**: Prefer immutability where possible. Mark classes as `final` unless inheritance is required. Prefer value types over reference types where applicable.
 - **Constructors over Setters**: Prefer immutability and constructor initialization over setters unless setters genuinely make more sense for the use case.
