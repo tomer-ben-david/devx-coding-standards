@@ -50,6 +50,11 @@ If a dependency is needed, make it required—not optional.
 
 If the dependency is truly optional (feature flag, graceful degradation), document why explicitly.
 
+## DRY & Shared Components (Guidance)
+
+- **Extract Shared Logic**: Prefer extracting UI patterns or business logic to shared components when they appear in multiple locations to maintain a single source of truth.
+- **Avoid Duplication**: Keep an eye out for duplicate "clever" logic or magic constants and consolidate them into utilities or shared components when appropriate.
+
 ## Test Isolation
 
 - **Avoid Macros**: Minimize `#if DEBUG`. Do not use it to expose private state or change logic for tests.
