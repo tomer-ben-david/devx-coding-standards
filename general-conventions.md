@@ -136,6 +136,7 @@ Align all bug fixing with the **Core Philosophy: Structural Fixes over Patches**
 
 - **Leave Code Better**: Always leave the code in a better state than you found it—refactor surrounding code for maintainability while fixing bugs or adding features.
 - **Reviewable Change Sets**: Keep each PR small and focused. If a change is functionally correct but adds unrelated refactors, extra fallbacks, or behavior that is not needed for the stated fix, trim it so the review surface stays clear.
+- **Intent-Revealing Names**: Name functions, variables, constants, enums, and types for the domain concept or behavior they represent. A reader seeing the code for the first time should understand what role the identifier plays and why it exists, not only decode what value it stores or what implementation detail it touches.
 - **DRY** (Don't Repeat Yourself): Ensure each piece of logic has a single representation.
 - **Immutability & Finality**: Prefer immutability where possible. Mark classes as `final` unless inheritance is required. Prefer value types over reference types where applicable.
 - **Constructors over Setters**: Prefer immutability and constructor initialization over setters unless setters genuinely make more sense for the use case.
