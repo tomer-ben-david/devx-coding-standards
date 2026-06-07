@@ -77,6 +77,10 @@ If the dependency is truly optional (feature flag, graceful degradation), docume
 
 - Prefer stronger type safety (for example sealed/union types and exhaustive matching) so invalid states or unhandled transitions fail at compile time whenever practical.
 
+## Control Flow Readability
+
+- **Guard Clauses**: Prefer clear early-return guards at the start of functions for preconditions, with one reason per guard, so the main logic stays flat.
+
 ## Data Modeling
 
 - **Domain-Driven**: Use explicit types for domain concepts (e.g., `User`, `Order`) instead of primitives or dictionaries.
