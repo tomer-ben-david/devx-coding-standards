@@ -10,6 +10,8 @@ This repository contains coding conventions and best practices that can be refer
 
 See [general-conventions.md](./general-conventions.md) for coding standards that apply to all programming languages. Examples use Swift syntax, but principles are language-agnostic.
 
+**Reviewers:** read [Code Review Preface](./general-conventions.md#code-review-preface-read-this-first) first — explicit goal **and non-goals**, branch-only scope, clarity focus, AI anti-patterns, and output format.
+
 ## Swift / SwiftUI Conventions
 
 See [swift-conventions.md](./swift-conventions.md) for Swift and SwiftUI-specific patterns and examples. This extends the [general conventions](./general-conventions.md) with Swift-specific syntax and patterns.

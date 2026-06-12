@@ -2,6 +2,71 @@
 
 These coding conventions apply to all programming languages. The core philosophy is to build robust, maintainable systems by prioritizing deep architectural integrity over surface-level fixes.
 
+## Code Review Preface (read this first)
+
+Use this section when reviewing a branch against `main` (or any PR). It scopes *what* to review and *how* to judge readability. Pair it with the rest of this document.
+
+### Goal and non-goals (read both before reviewing)
+
+Every review starts with an explicit **goal** and **non-goals**, supplied by the author or PR description. State both in your report so findings stay scoped.
+
+> **Goal:** _&lt;one sentence — what this branch/PR is trying to solve&gt;_
+
+> **Non-goals:** _&lt;bullets — what this review must NOT spend time on&gt;_
+
+Example goal: _Add RexIDE git review workflow (branch switch, pull, named local Codex + ChatGPT review panes) and preserve embedded JCEF browser state across pane maximize/restore._
+
+Example non-goals:
+
+- Bug hunting, edge cases, and runtime validation (other reviewers handle that)
+- Pre-existing issues already on `main` (review branch-introduced changes only)
+- Splitting the PR for size when the author accepted a larger scope
+- Drive-by refactors outside the stated goal
+
+**Do not file findings that fall under the stated non-goals.** If something outside scope is worth noting, label it _out of scope_ and do not count it toward merge confidence.
+
+### Scope: branch-introduced changes only
+
+- Review **only code this branch adds or changes** vs the base branch (`main`, etc.).
+- Do **not** flag pre-existing issues already on `main`. If `main` was bad, it was bad — your target is whether **our new commits** are good.
+
+### Focus: clarity, readability, and these conventions
+
+You are reviewing whether the **new** code is clear, readable, and aligned with this document — especially:
+
+- SRP, DRY, KISS, YAGNI (see [General Principles](#general-principles))
+- Structural root-cause fixes over patches (see [Core Philosophy](#core-philosophy-structural-fixes-over-patches))
+- Small, reviewable change sets (see [Reviewable Change Sets](#general-principles))
+- Intent-revealing names and flat control flow
+
+Also note where the branch **did well** against these standards, not only violations.
+
+### Anti-patterns to watch (common in AI-generated code)
+
+The implementing agent is often capable but tends toward code that is hard to review. Flag branch-introduced instances of:
+
+| Trap | What to look for |
+|------|------------------|
+| **Over-complex / cryptic / over-engineered** | Clever abstractions, deep nesting, magic behavior |
+| **Too many fallbacks** | Silent degradation, generic catch, swallowed errors |
+| **SRP / DRY violations** | God functions, duplicated readiness/rules across UI entry points |
+| **Unclear code** | Names that hide intent; nullable flags instead of explicit models |
+| **Whack-a-Mole / reactive patching** | Guards and one-off fixes at the symptom layer |
+| **Cover-up fixes** | Null checks, reload skips, `singleOrNull` silence — instead of encoding invariants |
+| **Overly specific tests** | Tests that mirror production structure instead of user-visible behavior |
+
+When you find these, say what **structural** change would improve PR readability (split PR, sealed types, extract workflow step, etc.) — not a list of micro-edits.
+
+### Review output format
+
+1. **Findings** — P1/P2/P3, file/area, branch-introduced only  
+2. **What went well** — where the branch matches these conventions  
+3. **PR readability** — 2–3 sentences overall  
+4. **Structural improvements** — what you would do to make the PR easier to read and trust (no drive-by refactors)  
+5. **Merge confidence (standards/clarity)** — yes / medium / no  
+
+Do not change files unless explicitly asked. Report only.
+
 ## Core Philosophy: Structural Fixes over Patches
 
 **We always prefer structural fixes and root cause analysis over patches.** This applies to all edits, not just bug fixes.

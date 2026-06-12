@@ -31,7 +31,7 @@ Read all convention files from the devx-coding-standards repository. Look for th
 3. Ask the user for the location if not found
 
 Always read these files (if they exist):
-- `general-conventions.md` — core principles (DI, error handling, testing, bug fixing, etc.)
+- `general-conventions.md` — start with **Code Review Preface** (explicit goal and non-goals, branch-only scope, anti-patterns, output format), then core principles (DI, error handling, testing, bug fixing, etc.)
 - `swift-conventions.md` — Swift/SwiftUI-specific patterns (if Swift code is being reviewed)
 - `commit-conventions.md` — commit message format
 
