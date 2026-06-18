@@ -213,3 +213,5 @@ Align all bug fixing with the **Core Philosophy: Structural Fixes over Patches**
 - **Simplicity over Caching**: Prefer clear, minimal state and derive from source-of-truth data when possible, even if it costs some performance. Use caches/indexes only when they provide clear, measured value.
 - **SOLID**: Apply the five SOLID principles for flexible architecture.
 - **YAGNI** (You Aren't Gonna Need It): Build only what is currently required.
+
+When reviewing TypeScript code, use [Effective TypeScript](https://effectivetypescript.com/) as an additional language-specific reference after applying these general conventions.
