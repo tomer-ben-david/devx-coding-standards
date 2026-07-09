@@ -25,9 +25,14 @@ Reviews code, diffs, or pull requests against the devx-coding-standards conventi
 ## How It Works
 
 ### Step 1: Read the conventions
+
+**Canonical paths (all agents):**
+- Standards repo: `~/dev/projects/devx-coding-standards`
+- Line-by-line review clause (include in every standards review prompt): `~/dev/projects/scripts/review-pipeline/devx-standards-read-clause.txt`
+
 Read all convention files from the devx-coding-standards repository. Look for them in this order:
 1. Project-local: check for a local copy or subtree of `devx-coding-standards/` in the current repo
-2. If the user's CLAUDE.md references `~/dev/projects/devx-coding-standards`, use that path
+2. `~/dev/projects/devx-coding-standards`
 3. Ask the user for the location if not found
 
 Always read these files (if they exist):
@@ -35,8 +40,12 @@ Always read these files (if they exist):
 - `swift-conventions.md` — Swift/SwiftUI-specific patterns (if Swift code is being reviewed)
 - `commit-conventions.md` — commit message format
 
+**Read every `##` section line by line** — do not skim or sample. Check the diff item-by-item against each section before reporting.
+
 ### Step 2: Analyze the code
 Examine the code or diff provided by the user. For each changed file, check it against every relevant convention section.
+
+When prompting any AI reviewer (ChatGPT, Codex tab, local agent), **include verbatim** the clause from `~/dev/projects/scripts/review-pipeline/devx-standards-read-clause.txt`.
 
 ### Step 3: Report findings
 Structure the review as:

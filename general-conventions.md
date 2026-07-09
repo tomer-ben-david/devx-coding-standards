@@ -2,6 +2,34 @@
 
 These coding conventions apply to all programming languages. The core philosophy is to build robust, maintainable systems by prioritizing deep architectural integrity over surface-level fixes.
 
+## #1 RULE: Prefer the best / long-term design over the quick / short-term one — and ignore human-shaped effort estimates
+
+**This is the #1 rule because it is the one agents violate most often.** Always favor the real best, long-term design over a quicker-to-implement short-term design. Do not pick a solution because it takes less time to write when a better long-term design exists. "Best design" is the broad framing; "structural fix over non-structural patch" is the common instance of it. When the root cause points at a structural change, implement the structural fix — e.g. page order must be rewritten into the PDF itself, not parked in a `reorder` column read instead (a second source of truth that will diverge). The same applies at the design level: prefer the design that will still be right in a year over the one that ships ten minutes sooner.
+
+**Ignore human-style effort estimates.** Agents routinely self-censor the best design by estimating it like a human would ("that's a big change, risky, hours of work") and then proposing a smaller, quicker design. An agent can do in minutes what a human budgets in hours. **Do not let a human-shaped effort estimate steer you away from the best long-term solution.** Judge a design by correctness, structure, and longevity — not by perceived implementation time.
+
+This is the inverse caution to #2: #2 says don't *over*-engineer; this says don't *under*-engineer into a short-term design. The deciding question is **"which design is the best long-term one?"** — implementation time is not a valid input to that decision.
+
+- Re-ask: **"Am I avoiding the best/long-term design because it feels big? Is that 'big' a real cost or a human-shaped estimate?"**
+- Re-ask: **"Does this short-term design create a second source of truth, a workaround, or tech debt that must be maintained forever?"** If yes, prefer the long-term design.
+- A larger design that is correct and durable is better than a small one that leaves the root cause in place or stores up debt.
+- State the trade-off explicitly to the user (long-term best vs. short-term quick), then default to the long-term one unless they say otherwise.
+
+## #2 RULE: When stuck or over-complex, rethink — look for the simpler overlooked solution
+
+When a problem becomes too complex, the fix keeps growing (A needs B needs C...), or you find yourself banging your head against the same solution — **STOP and rethink.** "Think outside the box" here does NOT mean unconventional or over-engineered. In most cases it means a **simple, effective solution you just didn't consider.** We frequently tunnel-vision on escalating fixes and miss that a much smaller solution exists.
+
+- Re-ask: **"What is the ACTUAL problem, and what is the MINIMAL change that solves just that?"**
+- Re-ask: **"Are we assuming a path that a simpler alternative would sidestep?"**
+- Don't defend the current direction — genuinely reconsider alternatives.
+- Favor the smallest correct fix over a clever, design-heavy, or unconventional one.
+
+This is KISS/YAGNI enforced through *active re-thinking*, not passive compliance. Over-engineering and over-design are constant risks; the overlooked simple path is usually the right one.
+
+## #3 RULE: Prove the user-visible outcome before implementing
+
+Before writing any fix, prove the actual **user-visible** outcome with the simplest possible check (a screenshot, a UI count, a log of what the user sees). Never assume an API-level or intermediate number ("the API returns 23") equals what the user sees ("the UI shows 1") — merge, filter, grounding, grouping, dedup, and UI collapse all sit between them. These layers routinely diverge. If you cannot first show the user-visible improvement with the simplest possible check, do not implement — you will polish the wrong layer. This is "prove before building" applied to the **end of the pipeline**, not just the start.
+
 ## Code Review Preface (read this first)
 
 Use this section when reviewing a branch against `main` (or any PR). It scopes *what* to review and *how* to judge readability. Pair it with the rest of this document.
@@ -67,10 +95,17 @@ When you find these, say what **structural** change would improve PR readability
 
 Do not change files unless explicitly asked. Report only.
 
+### Reproducibility / guarantees audit (a distinct review dimension)
+
+Diff review catches *changes that are wrong*; it does **not** catch *system properties that were never encoded* (a guarantee that lives only in a runbook, or only "by coincidence" of a default). Run this as a separate pass, not folded into the diff walk:
+
+For each thing the PR claims is true after merge (engine/dependency versions, schema state, feature flags + their defaults, rollback path, index presence, etc.), answer: **where is it enforced, and is that enforcement automatic or human?** Tag each guarantee: `IaC` / `migration` / `code` / `runbook (manual)` / `implicit (default/coincidence)`. Any guarantee tagged `runbook` or `implicit` is a reproducibility risk — a fresh account/environment depends on an operator remembering it, or on a default not changing. Flag those: either encode them (IaC/migration/code) or explicitly accept the manual step with the reason. This catches the class of gap a diff review structurally cannot (e.g., "engine version pinned in IaC but the extension version is a manual runbook step → fresh account isn't deterministic").
+
 ## Core Philosophy: Structural Fixes over Patches
 
 **We always prefer structural fixes and root cause analysis over patches.** This applies to all edits, not just bug fixes.
 
+- **Prove the problem before building.** Whether it's a bug fix or a feature, confirm the assumed cause/need with real evidence (logs, data, a repro) before writing code. A change built on an unverified hypothesis solves the wrong problem and wastes the whole review cycle.
 - **No Symptoms**: Do not treat symptoms (e.g., adding a null check, a catch block, or a guard clause).
 - **Fix the Root**: Find the underlying architectural reason why a failure is possible (e.g., state ownership, lifecycle mismatch, coupling) and fix it at the source.
 - **Encode Invariants**: Once fixed, encode the invariant in the type system or architecture so the failure mode becomes impossible to represent.
@@ -167,11 +202,14 @@ If the dependency is truly optional (feature flag, graceful degradation), docume
 - **Cleanup Without Recovery**: Use `finally`/`defer` only for mandatory cleanup (for example locks, in-flight maps, temp resources). Do not swallow or transform the original failure; let it propagate.
 - **Avoid Generic Catch**: Avoid `catch { print(error) }`. If you catch, handle specific errors or rethrow.
 - **Fail Loud by Default**: Prefer fast, explicit failures. Do not add silent fallbacks or degradation paths unless explicitly required.
+- **Config as Constants, Not Env**: Non-secret configuration (thresholds, tuning knobs, feature behavior) belongs as constants in the code — do not read it from environment variables with fallbacks to constants. Only secrets and genuine deployment-time values stay as env.
 
 ## Logging & Observability
 
 - **Structured Logging**: Use structured logging with canonical metadata keys (e.g., `serviceId`, `outcome`) for critical paths. **No `print()` or `console.log()`**.
 - **Preserve Exception Context**: When logging exceptions, include the full exception object (stack trace and message), not just `e.getMessage()`. Log the entire exception to preserve debugging context.
+- **Monitoring/metrics live in their own module, not inline in the feature file.** Calculation and emission of metrics/telemetry (counters, contribution rank, phase timings, tag construction) belongs in `lib/observability/<thing>-metrics.ts` (matching `grafana-metrics-push.ts`, `metrics.ts`, `metrics-environment.ts`). The feature file should contain **one call** — `recordX(...)` / `enqueueX(...)` — not the metric logic itself. Do not let instrumentation bloat the orchestrator: if the feature file grows metric/telemetry code beyond a single call site, extract it to `lib/observability/`. This keeps business logic readable and lets metric logic be reviewed/tested in isolation.
+- **The metrics transport (queue, batch, retry, wire format) is generic infrastructure; feature-specific metric construction does not live in it.** Keep the two concerns in separate modules so a backend change never couples to a product-telemetry change.
 
 ## Concurrency
 
@@ -198,6 +236,7 @@ Before reading a single file in a new codebase, use these diagnostic commands to
 Align all bug fixing with the **Core Philosophy: Structural Fixes over Patches**.
 
 - **Root Cause Analysis**: Before fixing a bug, read the whole codebase or larger areas around the bug. Understand the full flow before applying a fix.
+- **Prove the Cause Before Building the Fix**: Confirm the diagnosis with real evidence (a repro, logs, DB values, a worked example) *before* writing code. A fix built on an unverified hypothesis solves the wrong problem and wastes the review cycle. State the proof (e.g. "field A = X, field B = Y, so the substitution is real") before any edit.
 - **Deduce, Don't Store**: Prefer deducing state from the source of truth rather than caching/storing state that can become stale. If a value can be computed from existing data, compute it.
 - **Type-Safety Check**: For each fix, evaluate whether stronger types (e.g., constrained value objects, sealed unions) can prevent the same bug class from recurring.
 
@@ -210,7 +249,7 @@ Align all bug fixing with the **Core Philosophy: Structural Fixes over Patches**
 - **Immutability & Finality**: Prefer immutability where possible. Mark classes as `final` unless inheritance is required. Prefer value types over reference types where applicable.
 - **Constructors over Setters**: Prefer immutability and constructor initialization over setters unless setters genuinely make more sense for the use case.
 - **KISS** (Keep It Simple, Stupid): Prioritize simplicity and avoid over‑engineering.
-- **Simplicity over Caching**: Prefer clear, minimal state and derive from source-of-truth data when possible, even if it costs some performance. Use caches/indexes only when they provide clear, measured value.
+- **Simplicity over Caching**: Prefer clear, minimal state and derive from source-of-truth data when possible, even if it costs some performance. Use caches/indexes only when they provide clear, measured value. **Cache skepticism (enforcement):** when a PR introduces a cache (memoization, module-level `??=`, process-lifetime/request dedup), do not accept it on the author's say-so. Require a real measurement of the un-cached cost (EXPLAIN, timed run). Several caches were removed after proving the un-cached path was ~50-100ms - negligible. Default: remove the cache unless the un-cached cost is proven material at scale; if it stays, it must have a clear invalidation path (no process-lifetime stickiness, no silent stale/poisoned state). A cache that silently disables a feature on a transient error is worse than re-running a 50ms query.
 - **SOLID**: Apply the five SOLID principles for flexible architecture.
 - **YAGNI** (You Aren't Gonna Need It): Build only what is currently required.
 

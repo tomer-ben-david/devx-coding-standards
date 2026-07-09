@@ -1,2 +1,5 @@
 .idea/
 *.iml
+
+# Stray literal dir from accidental ~ expansion
+~/
