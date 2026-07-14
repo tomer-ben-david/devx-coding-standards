@@ -201,7 +201,7 @@ If the dependency is truly optional (feature flag, graceful degradation), docume
 - **Propagate Errors**: Do not catch errors internally unless you can fully recover from them. Let them throw to the caller.
 - **Cleanup Without Recovery**: Use `finally`/`defer` only for mandatory cleanup (for example locks, in-flight maps, temp resources). Do not swallow or transform the original failure; let it propagate.
 - **Avoid Generic Catch**: Avoid `catch { print(error) }`. If you catch, handle specific errors or rethrow.
-- **Fail Loud by Default**: Prefer fast, explicit failures. Do not add silent fallbacks or degradation paths unless explicitly required.
+- **Fail Loud by Default**: Prefer fast, explicit failures for violated invariants, missing required dependencies or configuration, security or data-integrity risk, and errors the current layer cannot safely recover from. This is not a blanket rule to crash or remove intentional graceful degradation in user-facing or production systems. When a review recommends replacing an explicit recovery path with a hard failure, classify it as an **optional product-policy recommendation** unless the current behavior demonstrably hides a broken required path, corrupts data, weakens security, or violates an explicit product contract. Put optional recommendations under **Structural improvements**, not **Findings**, and do not reduce merge confidence for them; state the availability and user-experience tradeoff instead.
 - **Config as Constants, Not Env**: Non-secret configuration (thresholds, tuning knobs, feature behavior) belongs as constants in the code — do not read it from environment variables with fallbacks to constants. Only secrets and genuine deployment-time values stay as env.
 
 ## Logging & Observability
