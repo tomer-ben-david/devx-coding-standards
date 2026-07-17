@@ -2,20 +2,24 @@
 
 These coding conventions apply to all programming languages. The core philosophy is to build robust, maintainable systems by prioritizing deep architectural integrity over surface-level fixes.
 
-## #1 RULE: Prefer the best / long-term design over the quick / short-term one — and ignore human-shaped effort estimates
+## #1 RULE: Write for the next reader — code must be clear, DRY, SRP, and long-term maintainable
 
-**This is the #1 rule because it is the one agents violate most often.** Always favor the real best, long-term design over a quicker-to-implement short-term design. Do not pick a solution because it takes less time to write when a better long-term design exists. "Best design" is the broad framing; "structural fix over non-structural patch" is the common instance of it. When the root cause points at a structural change, implement the structural fix — e.g. page order must be rewritten into the PDF itself, not parked in a `reorder` column read instead (a second source of truth that will diverge). The same applies at the design level: prefer the design that will still be right in a year over the one that ships ten minutes sooner.
+**This is the #1 rule because clever-but-unclear code is the most common AI failure mode, and it compounds: every unclear or duplicated line is debt the next reader (or you, in a year) must re-pay.** Optimize for the person who will read or change this code long after you've forgotten it — not for the compiler, not for cleverness, not for brevity. Five non-negotiable values, in priority order: **Clear** (a reader understands a line without re-deriving intent; if they must decode precedence, rewrite it), **DRY** (one source of truth — never duplicate logic, types, or constants; derive or share instead), **SRP** (one job per function; if its name needs "and", split it), **Long-term** (prefer the design still right in a year over the one that ships ten minutes sooner), **Maintainable** (obvious today stays cheap to change for years; clever today becomes a hazard forever). Never trade long-term clarity for short-term cleverness or brevity. This is about the **code itself** — distinct from #2 (long-term *design*) and #3 (don't *over*-engineer): you can satisfy both and still ship an unreadable nested ternary.
+
+## #2 RULE: Prefer the best / long-term design over the quick / short-term one — and ignore human-shaped effort estimates
+
+**This is one of the rules agents violate most often.** Always favor the real best, long-term design over a quicker-to-implement short-term design. Do not pick a solution because it takes less time to write when a better long-term design exists. "Best design" is the broad framing; "structural fix over non-structural patch" is the common instance of it. When the root cause points at a structural change, implement the structural fix — e.g. page order must be rewritten into the PDF itself, not parked in a `reorder` column read instead (a second source of truth that will diverge). The same applies at the design level: prefer the design that will still be right in a year over the one that ships ten minutes sooner.
 
 **Ignore human-style effort estimates.** Agents routinely self-censor the best design by estimating it like a human would ("that's a big change, risky, hours of work") and then proposing a smaller, quicker design. An agent can do in minutes what a human budgets in hours. **Do not let a human-shaped effort estimate steer you away from the best long-term solution.** Judge a design by correctness, structure, and longevity — not by perceived implementation time.
 
-This is the inverse caution to #2: #2 says don't *over*-engineer; this says don't *under*-engineer into a short-term design. The deciding question is **"which design is the best long-term one?"** — implementation time is not a valid input to that decision.
+This is the inverse caution to #3: #3 says don't *over*-engineer; this says don't *under*-engineer into a short-term design. The deciding question is **"which design is the best long-term one?"** — implementation time is not a valid input to that decision.
 
 - Re-ask: **"Am I avoiding the best/long-term design because it feels big? Is that 'big' a real cost or a human-shaped estimate?"**
 - Re-ask: **"Does this short-term design create a second source of truth, a workaround, or tech debt that must be maintained forever?"** If yes, prefer the long-term design.
 - A larger design that is correct and durable is better than a small one that leaves the root cause in place or stores up debt.
 - State the trade-off explicitly to the user (long-term best vs. short-term quick), then default to the long-term one unless they say otherwise.
 
-## #2 RULE: When stuck or over-complex, rethink — look for the simpler overlooked solution
+## #3 RULE: When stuck or over-complex, rethink — look for the simpler overlooked solution
 
 When a problem becomes too complex, the fix keeps growing (A needs B needs C...), or you find yourself banging your head against the same solution — **STOP and rethink.** "Think outside the box" here does NOT mean unconventional or over-engineered. In most cases it means a **simple, effective solution you just didn't consider.** We frequently tunnel-vision on escalating fixes and miss that a much smaller solution exists.
 
@@ -26,7 +30,7 @@ When a problem becomes too complex, the fix keeps growing (A needs B needs C...)
 
 This is KISS/YAGNI enforced through *active re-thinking*, not passive compliance. Over-engineering and over-design are constant risks; the overlooked simple path is usually the right one.
 
-## #3 RULE: Prove the user-visible outcome before implementing
+## #4 RULE: Prove the user-visible outcome before implementing
 
 Before writing any fix, prove the actual **user-visible** outcome with the simplest possible check (a screenshot, a UI count, a log of what the user sees). Never assume an API-level or intermediate number ("the API returns 23") equals what the user sees ("the UI shows 1") — merge, filter, grounding, grouping, dedup, and UI collapse all sit between them. These layers routinely diverge. If you cannot first show the user-visible improvement with the simplest possible check, do not implement — you will polish the wrong layer. This is "prove before building" applied to the **end of the pipeline**, not just the start.
 
