@@ -85,9 +85,25 @@ The implementing agent is often capable but tends toward code that is hard to re
 | **Unclear code** | Names that hide intent; nullable flags instead of explicit models |
 | **Whack-a-Mole / reactive patching** | Guards and one-off fixes at the symptom layer |
 | **Cover-up fixes** | Null checks, reload skips, `singleOrNull` silence — instead of encoding invariants |
+| **Write-time policy collapse** | Baking customer semantics into materialized writes when facts would let read decide; erasing fields read needs; client/UI reconstructing identity read failed to publish |
 | **Overly specific tests** | Tests that mirror production structure instead of user-visible behavior |
 
 When you find these, say what **structural** change would improve PR readability (split PR, sealed types, extract workflow step, etc.) — not a list of micro-edits.
+
+### Pre-push structural smell gate
+
+Before a branch is pushed for review, inspect both the complete uncommitted patch and the full branch diff. This is a separate gate from tests: passing tests do not justify unnecessary machinery or unrelated churn.
+
+Check explicitly for:
+
+- duplicated state or logic that creates a second source of truth
+- mirrored fields or lifecycle state without a proven current reader
+- guards added late in a transaction or repeated across callers instead of enforced by the structural owner
+- changes to shared owners made only to satisfy one feature or test
+- formatting churn, generated-file drift, or unrelated refactors hiding the semantic diff
+- tests overfitted to one fixture, coordinate, identifier, or narrow input instead of proving the invariant
+
+For each signal, trace the actual reader, writer, and state owner before deciding. Fix a branch-introduced, goal-required defect at its owner. Remove optional machinery instead of patching its edge cases. Revert shared-owner and formatting drift that the goal does not require. Do not push until every signal is either removed or explicitly classified against the branch goal and non-goals with evidence.
 
 ### Review output format
 
@@ -158,6 +174,8 @@ If the dependency is truly optional (feature flag, graceful degradation), docume
 
 - **Extract Shared Logic**: Prefer extracting UI patterns or business logic to shared components when they appear in multiple locations to maintain a single source of truth.
 - **Avoid Duplication**: Keep an eye out for duplicate "clever" logic or magic constants and consolidate them into utilities or shared components when appropriate.
+- **Align with the codebase before designing new code.** Before designing an API, helper, middleware, error handler, logging call, or naming a concept, look at how the surrounding codebase already does it and reuse the existing utility/convention. Inventing a parallel helper, a second error shape, or a new middleware for a need the codebase already solves is a DRY violation and a second source of truth. Match existing patterns for names, module layout, and abstraction style; only introduce a new abstraction when no existing one fits.
+- **Identifiers that cross format boundaries are silent duplicates.** When a typed identifier (an enum case, `as const` key, or named constant in any language) is also emitted as a bare string inside a query or config the compiler/typechecker cannot see (SQL, PromQL, log keys, JSON, dashboard strings), DRY-in-code will not catch a drift: a rename updates the typed side and silently leaves the string, and tests asserting the old literal keep passing. Define the identifier once as a constant and interpolate it into every string (`policy="${POLICY.interactive}"`, `WHERE status = ${Status.ACTIVE}`), and prefer a type-level check that the table/mapping has exactly those keys where the language allows. A duplicated identifier the typechecker cannot reach is a second source of truth.
 
 ## Test Isolation
 
@@ -168,11 +186,13 @@ If the dependency is truly optional (feature flag, graceful degradation), docume
 ## Testing Philosophy
 
 - **Local E2E**: Prefer integration-style tests that exercise full flows (e.g., ViewModel → Service → Client) using in-memory fakes. Avoid testing implementation details; test user-facing behavior.
+- **Choose the Clearest, Most Truthful Test Boundary**: Use the test type that expresses the behavior most clearly and covers the most meaningful logic without mirroring implementation structure. Prefer a few broad scenarios that read like real use (`call API -> observe response -> read resulting state`) over many focused unit tests. When Testcontainers (or the repository's equivalent) makes that flow more readable and truthful by providing real dependencies without a separately running server, prefer it over mock-heavy unit tests or in-memory substitutes, not only for explicitly database-focused features. A real database is especially important when correctness depends on transactions, locking, concurrency, constraints, or query behavior. Reserve focused unit tests for genuinely isolated logic where they are the clearer test.
 - **Do Not Mirror Production Models in Tests**: Tests should not define parallel DTOs, schemas, summaries, or field lists that duplicate production models/read APIs. Prefer production readers/selectors and infer fixture return types from builders or seed functions so production field changes fail in one obvious place.
 - **Builder Defaults over Fixture Dumps**: For deterministic test data, use small builders with clear defaults and targeted overrides instead of large static JSON blobs or repeated object literals. Builders should create only source facts; production code should still derive keys, links, fingerprints, deduplication, and enriched state.
 
 ## Architecture & State
 
+- **Write facts, decide on read.** Persist **stable facts** at write/materialization time (what was observed, where, what the matcher believed, what a human did, registration/setup). Put **policy and customer semantics** on the read path in **one canonical function** (eligibility, counting, routing, buckets) used by UI, exports, and totals — so rules can evolve without re-projecting or client-side recovery. **Do not erase facts at write** that read still needs (e.g. clearing symbol identity on exclude when the glyph still depicts a known definition). **Do not reconstruct missing identity downstream** (click handlers, ad-hoc geometry guesses) when read should have published it — fail loud instead. Setup/registration (e.g. "this page is a legend copy") is a **fact**, not a deferred policy decision.
 - **Composition Root**: Wire up all dependencies in a single location (e.g., `App.init`, `main()`, application entry point) rather than scattering initialization logic. Initialize and own core dependencies (Stores, Managers) at the application root.
 - **No Delegate Storage**: Avoid storing app state in delegates. Use delegates only for system lifecycle events, not as a dependency container.
 - **Static Helpers**: Avoid `static var` dependencies in helper enums/structs. Pass dependencies as method arguments (Method Injection) or convert the helper to an injectable service.
@@ -180,6 +200,7 @@ If the dependency is truly optional (feature flag, graceful degradation), docume
 ## Type Safety & State Machines
 
 - Prefer stronger type safety (for example sealed/union types and exhaustive matching) so invalid states or unhandled transitions fail at compile time whenever practical.
+- **Typed persistence over raw SQL writers.** If the project already has an ORM/typed client for that database (Prisma, etc.), persist through it so a column/field rename fails at compile time. Raw SQL inserts/updates are strings the typechecker cannot see. Do not enable extra ORM features (e.g. multi-schema) just to type two tables; then keep SQL and prove writers against real DDL (Testcontainers calling production capture/write paths — not a second handwritten INSERT).
 
 ## Control Flow Readability
 
@@ -205,7 +226,7 @@ If the dependency is truly optional (feature flag, graceful degradation), docume
 - **Propagate Errors**: Do not catch errors internally unless you can fully recover from them. Let them throw to the caller.
 - **Cleanup Without Recovery**: Use `finally`/`defer` only for mandatory cleanup (for example locks, in-flight maps, temp resources). Do not swallow or transform the original failure; let it propagate.
 - **Avoid Generic Catch**: Avoid `catch { print(error) }`. If you catch, handle specific errors or rethrow.
-- **Fail Loud by Default**: Prefer fast, explicit failures for violated invariants, missing required dependencies or configuration, security or data-integrity risk, and errors the current layer cannot safely recover from. This is not a blanket rule to crash or remove intentional graceful degradation in user-facing or production systems. When a review recommends replacing an explicit recovery path with a hard failure, classify it as an **optional product-policy recommendation** unless the current behavior demonstrably hides a broken required path, corrupts data, weakens security, or violates an explicit product contract. Put optional recommendations under **Structural improvements**, not **Findings**, and do not reduce merge confidence for them; state the availability and user-experience tradeoff instead.
+- **Fail Loud by Default**: Prefer fast, explicit failures for violated invariants, missing required dependencies or configuration, security or data-integrity risk, and errors the current layer cannot safely recover from. This is not a blanket rule to crash or remove intentional graceful degradation in user-facing or production systems; however, any graceful degradation, hidden error, or value hidden from the user must at least be loud in logs (and in metrics when appropriate) so the failure stays visible and is never silently swallowed. When a review recommends replacing an explicit recovery path with a hard failure, classify it as an **optional product-policy recommendation** unless the current behavior demonstrably hides a broken required path, corrupts data, weakens security, or violates an explicit product contract. Put optional recommendations under **Structural improvements**, not **Findings**, and do not reduce merge confidence for them; state the availability and user-experience tradeoff instead.
 - **Config as Constants, Not Env**: Non-secret configuration (thresholds, tuning knobs, feature behavior) belongs as constants in the code — do not read it from environment variables with fallbacks to constants. Only secrets and genuine deployment-time values stay as env.
 
 ## Logging & Observability
