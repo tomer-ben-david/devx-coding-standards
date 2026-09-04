@@ -85,7 +85,7 @@ The implementing agent is often capable but tends toward code that is hard to re
 | **Unclear code** | Names that hide intent; nullable flags instead of explicit models |
 | **Whack-a-Mole / reactive patching** | Guards and one-off fixes at the symptom layer |
 | **Cover-up fixes** | Null checks, reload skips, `singleOrNull` silence — instead of encoding invariants |
-| **Write-time policy collapse** | Baking customer semantics into materialized writes when facts would let read decide; erasing fields read needs; client/UI reconstructing identity read failed to publish |
+| **Write-time policy collapse** | Deciding customer semantics at write when facts would let read decide later; erasing fields read needs; client/UI reconstructing identity read failed to publish |
 | **Overly specific tests** | Tests that mirror production structure instead of user-visible behavior |
 
 When you find these, say what **structural** change would improve PR readability (split PR, sealed types, extract workflow step, etc.) — not a list of micro-edits.
@@ -192,7 +192,18 @@ If the dependency is truly optional (feature flag, graceful degradation), docume
 
 ## Architecture & State
 
-- **Write facts, decide on read.** Persist **stable facts** at write/materialization time (what was observed, where, what the matcher believed, what a human did, registration/setup). Put **policy and customer semantics** on the read path in **one canonical function** (eligibility, counting, routing, buckets) used by UI, exports, and totals — so rules can evolve without re-projecting or client-side recovery. **Do not erase facts at write** that read still needs (e.g. clearing symbol identity on exclude when the glyph still depicts a known definition). **Do not reconstruct missing identity downstream** (click handlers, ad-hoc geometry guesses) when read should have published it — fail loud instead. Setup/registration (e.g. "this page is a legend copy") is a **fact**, not a deferred policy decision.
+### Delay the decision (write facts, decide on read)
+
+**Delay policy decisions as far down the pipeline as you can** — without hiding errors, recomputing expensive work on every read, or pushing semantics into clients. The default split:
+
+- **Write / materialize facts early** — what was observed, where, what the matcher believed, what a human did, registration/setup. Store matching **evidence**, not final customer meaning.
+- **Decide on read** — eligibility, counting, routing, buckets, and prepared-search identity in **one canonical server function** used by UI, exports, and totals, so rules can change without re-projecting or client-side recovery.
+- **Do not erase facts at write** that read still needs (e.g. clearing symbol identity on exclude when the glyph still depicts a known definition).
+- **Do not reconstruct missing identity downstream** (click handlers, ad-hoc geometry guesses) when read should have published it — fail loud instead.
+- **Registration/setup is still a fact** (e.g. "this page is a legend copy"), not a deferred policy call.
+
+When read-time policy would make materialized counts or summaries a second source of truth, derive them from the same classifier or version them — do not let write and read disagree silently.
+
 - **Composition Root**: Wire up all dependencies in a single location (e.g., `App.init`, `main()`, application entry point) rather than scattering initialization logic. Initialize and own core dependencies (Stores, Managers) at the application root.
 - **No Delegate Storage**: Avoid storing app state in delegates. Use delegates only for system lifecycle events, not as a dependency container.
 - **Static Helpers**: Avoid `static var` dependencies in helper enums/structs. Pass dependencies as method arguments (Method Injection) or convert the helper to an injectable service.
