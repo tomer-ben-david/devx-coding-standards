@@ -2,20 +2,24 @@
 
 These coding conventions apply to all programming languages. The core philosophy is to build robust, maintainable systems by prioritizing deep architectural integrity over surface-level fixes.
 
-## #1 RULE: Prefer the best / long-term design over the quick / short-term one — and ignore human-shaped effort estimates
+## #1 RULE: Write for the next reader — code must be clear, DRY, SRP, and long-term maintainable
 
-**This is the #1 rule because it is the one agents violate most often.** Always favor the real best, long-term design over a quicker-to-implement short-term design. Do not pick a solution because it takes less time to write when a better long-term design exists. "Best design" is the broad framing; "structural fix over non-structural patch" is the common instance of it. When the root cause points at a structural change, implement the structural fix — e.g. page order must be rewritten into the PDF itself, not parked in a `reorder` column read instead (a second source of truth that will diverge). The same applies at the design level: prefer the design that will still be right in a year over the one that ships ten minutes sooner.
+**This is the #1 rule because clever-but-unclear code is the most common AI failure mode, and it compounds: every unclear or duplicated line is debt the next reader (or you, in a year) must re-pay.** Optimize for the person who will read or change this code long after you've forgotten it — not for the compiler, not for cleverness, not for brevity. Five non-negotiable values, in priority order: **Clear** (a reader understands a line without re-deriving intent; if they must decode precedence, rewrite it), **DRY** (one source of truth — never duplicate logic, types, or constants; derive or share instead), **SRP** (one job per function; if its name needs "and", split it), **Long-term** (prefer the design still right in a year over the one that ships ten minutes sooner), **Maintainable** (obvious today stays cheap to change for years; clever today becomes a hazard forever). Never trade long-term clarity for short-term cleverness or brevity. This is about the **code itself** — distinct from #2 (long-term *design*) and #3 (don't *over*-engineer): you can satisfy both and still ship an unreadable nested ternary.
+
+## #2 RULE: Prefer the best / long-term design over the quick / short-term one — and ignore human-shaped effort estimates
+
+**This is one of the rules agents violate most often.** Always favor the real best, long-term design over a quicker-to-implement short-term design. Do not pick a solution because it takes less time to write when a better long-term design exists. "Best design" is the broad framing; "structural fix over non-structural patch" is the common instance of it. When the root cause points at a structural change, implement the structural fix — e.g. page order must be rewritten into the PDF itself, not parked in a `reorder` column read instead (a second source of truth that will diverge). The same applies at the design level: prefer the design that will still be right in a year over the one that ships ten minutes sooner.
 
 **Ignore human-style effort estimates.** Agents routinely self-censor the best design by estimating it like a human would ("that's a big change, risky, hours of work") and then proposing a smaller, quicker design. An agent can do in minutes what a human budgets in hours. **Do not let a human-shaped effort estimate steer you away from the best long-term solution.** Judge a design by correctness, structure, and longevity — not by perceived implementation time.
 
-This is the inverse caution to #2: #2 says don't *over*-engineer; this says don't *under*-engineer into a short-term design. The deciding question is **"which design is the best long-term one?"** — implementation time is not a valid input to that decision.
+This is the inverse caution to #3: #3 says don't *over*-engineer; this says don't *under*-engineer into a short-term design. The deciding question is **"which design is the best long-term one?"** — implementation time is not a valid input to that decision.
 
 - Re-ask: **"Am I avoiding the best/long-term design because it feels big? Is that 'big' a real cost or a human-shaped estimate?"**
 - Re-ask: **"Does this short-term design create a second source of truth, a workaround, or tech debt that must be maintained forever?"** If yes, prefer the long-term design.
 - A larger design that is correct and durable is better than a small one that leaves the root cause in place or stores up debt.
 - State the trade-off explicitly to the user (long-term best vs. short-term quick), then default to the long-term one unless they say otherwise.
 
-## #2 RULE: When stuck or over-complex, rethink — look for the simpler overlooked solution
+## #3 RULE: When stuck or over-complex, rethink — look for the simpler overlooked solution
 
 When a problem becomes too complex, the fix keeps growing (A needs B needs C...), or you find yourself banging your head against the same solution — **STOP and rethink.** "Think outside the box" here does NOT mean unconventional or over-engineered. In most cases it means a **simple, effective solution you just didn't consider.** We frequently tunnel-vision on escalating fixes and miss that a much smaller solution exists.
 
@@ -26,7 +30,7 @@ When a problem becomes too complex, the fix keeps growing (A needs B needs C...)
 
 This is KISS/YAGNI enforced through *active re-thinking*, not passive compliance. Over-engineering and over-design are constant risks; the overlooked simple path is usually the right one.
 
-## #3 RULE: Prove the user-visible outcome before implementing
+## #4 RULE: Prove the user-visible outcome before implementing
 
 Before writing any fix, prove the actual **user-visible** outcome with the simplest possible check (a screenshot, a UI count, a log of what the user sees). Never assume an API-level or intermediate number ("the API returns 23") equals what the user sees ("the UI shows 1") — merge, filter, grounding, grouping, dedup, and UI collapse all sit between them. These layers routinely diverge. If you cannot first show the user-visible improvement with the simplest possible check, do not implement — you will polish the wrong layer. This is "prove before building" applied to the **end of the pipeline**, not just the start.
 
@@ -81,9 +85,25 @@ The implementing agent is often capable but tends toward code that is hard to re
 | **Unclear code** | Names that hide intent; nullable flags instead of explicit models |
 | **Whack-a-Mole / reactive patching** | Guards and one-off fixes at the symptom layer |
 | **Cover-up fixes** | Null checks, reload skips, `singleOrNull` silence — instead of encoding invariants |
+| **Write-time policy collapse** | Deciding customer semantics at write when facts would let read decide later; erasing fields read needs; client/UI reconstructing identity read failed to publish |
 | **Overly specific tests** | Tests that mirror production structure instead of user-visible behavior |
 
 When you find these, say what **structural** change would improve PR readability (split PR, sealed types, extract workflow step, etc.) — not a list of micro-edits.
+
+### Pre-push structural smell gate
+
+Before a branch is pushed for review, inspect both the complete uncommitted patch and the full branch diff. This is a separate gate from tests: passing tests do not justify unnecessary machinery or unrelated churn.
+
+Check explicitly for:
+
+- duplicated state or logic that creates a second source of truth
+- mirrored fields or lifecycle state without a proven current reader
+- guards added late in a transaction or repeated across callers instead of enforced by the structural owner
+- changes to shared owners made only to satisfy one feature or test
+- formatting churn, generated-file drift, or unrelated refactors hiding the semantic diff
+- tests overfitted to one fixture, coordinate, identifier, or narrow input instead of proving the invariant
+
+For each signal, trace the actual reader, writer, and state owner before deciding. Fix a branch-introduced, goal-required defect at its owner. Remove optional machinery instead of patching its edge cases. Revert shared-owner and formatting drift that the goal does not require. Do not push until every signal is either removed or explicitly classified against the branch goal and non-goals with evidence.
 
 ### Review output format
 
@@ -154,6 +174,8 @@ If the dependency is truly optional (feature flag, graceful degradation), docume
 
 - **Extract Shared Logic**: Prefer extracting UI patterns or business logic to shared components when they appear in multiple locations to maintain a single source of truth.
 - **Avoid Duplication**: Keep an eye out for duplicate "clever" logic or magic constants and consolidate them into utilities or shared components when appropriate.
+- **Align with the codebase before designing new code.** Before designing an API, helper, middleware, error handler, logging call, or naming a concept, look at how the surrounding codebase already does it and reuse the existing utility/convention. Inventing a parallel helper, a second error shape, or a new middleware for a need the codebase already solves is a DRY violation and a second source of truth. Match existing patterns for names, module layout, and abstraction style; only introduce a new abstraction when no existing one fits.
+- **Identifiers that cross format boundaries are silent duplicates.** When a typed identifier (an enum case, `as const` key, or named constant in any language) is also emitted as a bare string inside a query or config the compiler/typechecker cannot see (SQL, PromQL, log keys, JSON, dashboard strings), DRY-in-code will not catch a drift: a rename updates the typed side and silently leaves the string, and tests asserting the old literal keep passing. Define the identifier once as a constant and interpolate it into every string (`policy="${POLICY.interactive}"`, `WHERE status = ${Status.ACTIVE}`), and prefer a type-level check that the table/mapping has exactly those keys where the language allows. A duplicated identifier the typechecker cannot reach is a second source of truth.
 
 ## Test Isolation
 
@@ -164,10 +186,23 @@ If the dependency is truly optional (feature flag, graceful degradation), docume
 ## Testing Philosophy
 
 - **Local E2E**: Prefer integration-style tests that exercise full flows (e.g., ViewModel → Service → Client) using in-memory fakes. Avoid testing implementation details; test user-facing behavior.
+- **Choose the Clearest, Most Truthful Test Boundary**: Use the test type that expresses the behavior most clearly and covers the most meaningful logic without mirroring implementation structure. Prefer a few broad scenarios that read like real use (`call API -> observe response -> read resulting state`) over many focused unit tests. When Testcontainers (or the repository's equivalent) makes that flow more readable and truthful by providing real dependencies without a separately running server, prefer it over mock-heavy unit tests or in-memory substitutes, not only for explicitly database-focused features. A real database is especially important when correctness depends on transactions, locking, concurrency, constraints, or query behavior. Reserve focused unit tests for genuinely isolated logic where they are the clearer test.
 - **Do Not Mirror Production Models in Tests**: Tests should not define parallel DTOs, schemas, summaries, or field lists that duplicate production models/read APIs. Prefer production readers/selectors and infer fixture return types from builders or seed functions so production field changes fail in one obvious place.
 - **Builder Defaults over Fixture Dumps**: For deterministic test data, use small builders with clear defaults and targeted overrides instead of large static JSON blobs or repeated object literals. Builders should create only source facts; production code should still derive keys, links, fingerprints, deduplication, and enriched state.
 
 ## Architecture & State
+
+### Delay the decision (write facts, decide on read)
+
+**Delay policy decisions as far down the pipeline as you can** — without hiding errors, recomputing expensive work on every read, or pushing semantics into clients. The default split:
+
+- **Write / materialize facts early** — what was observed, where, what the matcher believed, what a human did, registration/setup. Store matching **evidence**, not final customer meaning.
+- **Decide on read** — eligibility, counting, routing, buckets, and prepared-search identity in **one canonical server function** used by UI, exports, and totals, so rules can change without re-projecting or client-side recovery.
+- **Do not erase facts at write** that read still needs (e.g. clearing symbol identity on exclude when the glyph still depicts a known definition).
+- **Do not reconstruct missing identity downstream** (click handlers, ad-hoc geometry guesses) when read should have published it — fail loud instead.
+- **Registration/setup is still a fact** (e.g. "this page is a legend copy"), not a deferred policy call.
+
+When read-time policy would make materialized counts or summaries a second source of truth, derive them from the same classifier or version them — do not let write and read disagree silently.
 
 - **Composition Root**: Wire up all dependencies in a single location (e.g., `App.init`, `main()`, application entry point) rather than scattering initialization logic. Initialize and own core dependencies (Stores, Managers) at the application root.
 - **No Delegate Storage**: Avoid storing app state in delegates. Use delegates only for system lifecycle events, not as a dependency container.
@@ -176,6 +211,7 @@ If the dependency is truly optional (feature flag, graceful degradation), docume
 ## Type Safety & State Machines
 
 - Prefer stronger type safety (for example sealed/union types and exhaustive matching) so invalid states or unhandled transitions fail at compile time whenever practical.
+- **Typed persistence over raw SQL writers.** If the project already has an ORM/typed client for that database (Prisma, etc.), persist through it so a column/field rename fails at compile time. Raw SQL inserts/updates are strings the typechecker cannot see. Do not enable extra ORM features (e.g. multi-schema) just to type two tables; then keep SQL and prove writers against real DDL (Testcontainers calling production capture/write paths — not a second handwritten INSERT).
 
 ## Control Flow Readability
 
@@ -201,7 +237,7 @@ If the dependency is truly optional (feature flag, graceful degradation), docume
 - **Propagate Errors**: Do not catch errors internally unless you can fully recover from them. Let them throw to the caller.
 - **Cleanup Without Recovery**: Use `finally`/`defer` only for mandatory cleanup (for example locks, in-flight maps, temp resources). Do not swallow or transform the original failure; let it propagate.
 - **Avoid Generic Catch**: Avoid `catch { print(error) }`. If you catch, handle specific errors or rethrow.
-- **Fail Loud by Default**: Prefer fast, explicit failures. Do not add silent fallbacks or degradation paths unless explicitly required.
+- **Fail Loud by Default**: Prefer fast, explicit failures for violated invariants, missing required dependencies or configuration, security or data-integrity risk, and errors the current layer cannot safely recover from. This is not a blanket rule to crash or remove intentional graceful degradation in user-facing or production systems; however, any graceful degradation, hidden error, or value hidden from the user must at least be loud in logs (and in metrics when appropriate) so the failure stays visible and is never silently swallowed. When a review recommends replacing an explicit recovery path with a hard failure, classify it as an **optional product-policy recommendation** unless the current behavior demonstrably hides a broken required path, corrupts data, weakens security, or violates an explicit product contract. Put optional recommendations under **Structural improvements**, not **Findings**, and do not reduce merge confidence for them; state the availability and user-experience tradeoff instead.
 - **Config as Constants, Not Env**: Non-secret configuration (thresholds, tuning knobs, feature behavior) belongs as constants in the code — do not read it from environment variables with fallbacks to constants. Only secrets and genuine deployment-time values stay as env.
 
 ## Logging & Observability
