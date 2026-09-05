@@ -33,6 +33,8 @@ Read all relevant convention files from the devx-coding-standards repository. Lo
 Always read:
 - `general-conventions.md` — core principles
 - `swift-conventions.md` — if writing Swift code
+- `typescript-javascript-conventions.md` — if writing TypeScript or JavaScript code
+- `effective-typescript.md` — if writing TypeScript code
 - `commit-conventions.md` — only if also writing commit messages
 
 ### Step 2: Understand the task

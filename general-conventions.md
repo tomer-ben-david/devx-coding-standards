@@ -289,4 +289,4 @@ Align all bug fixing with the **Core Philosophy: Structural Fixes over Patches**
 - **SOLID**: Apply the five SOLID principles for flexible architecture.
 - **YAGNI** (You Aren't Gonna Need It): Build only what is currently required.
 
-When reviewing TypeScript code, use [Effective TypeScript](https://effectivetypescript.com/) as an additional language-specific reference after applying these general conventions.
+When reviewing TypeScript or JavaScript code, apply [typescript-javascript-conventions.md](./typescript-javascript-conventions.md) (anti-slop patterns) and use [Effective TypeScript](https://effectivetypescript.com/) as an additional TS type-system reference after applying these general conventions.

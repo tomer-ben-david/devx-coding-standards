@@ -3,6 +3,8 @@
 TypeScript-**specific** reference. For the general principles that apply to *all*
 languages — type safety, structural fixes, error handling, observability
 separation, review format — read **[general-conventions.md](./general-conventions.md)**.
+For TS/JS lint-enforceable anti-patterns (anti-slop), see
+**[typescript-javascript-conventions.md](./typescript-javascript-conventions.md)**.
 This file does **not** repeat them; it only adds the TS-specific pointer.
 
 ## Canonical reference

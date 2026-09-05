@@ -38,6 +38,8 @@ Read all convention files from the devx-coding-standards repository. Look for th
 Always read these files (if they exist):
 - `general-conventions.md` — start with **Code Review Preface** (explicit goal and non-goals, branch-only scope, anti-patterns, output format), then core principles (DI, error handling, testing, bug fixing, etc.)
 - `swift-conventions.md` — Swift/SwiftUI-specific patterns (if Swift code is being reviewed)
+- `typescript-javascript-conventions.md` — TypeScript/JavaScript patterns including anti-slop (if TS/JS code is being reviewed)
+- `effective-typescript.md` — Effective TypeScript book pointer (if TypeScript code is being reviewed)
 - `commit-conventions.md` — commit message format
 
 **Read every `##` section line by line** — do not skim or sample. Check the diff item-by-item against each section before reporting.
@@ -72,5 +74,6 @@ If the user wants fixes applied, modify the code to comply with the conventions 
 
 ## Scope Notes
 - For Swift code, apply both `general-conventions.md` and `swift-conventions.md`.
+- For TypeScript/JavaScript code, apply `general-conventions.md`, `typescript-javascript-conventions.md`, and `effective-typescript.md` for TypeScript.
 - For other languages, apply `general-conventions.md` only (it's language-agnostic).
 - For commit messages, apply `commit-conventions.md`.
