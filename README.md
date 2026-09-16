@@ -16,7 +16,8 @@ See [general-conventions.md](./general-conventions.md) for coding standards that
 
 1. **Read fully, every time.** Read [`general-conventions.md`](./general-conventions.md) end-to-end (applies to all languages) **plus** the language-specific file matching the code under review ([`swift-conventions.md`](./swift-conventions.md) / [`typescript-javascript-conventions.md`](./typescript-javascript-conventions.md) / [`effective-typescript.md`](./effective-typescript.md)). Don't review from memory.
 2. **Scope:** branch-introduced changes only — never pre-existing issues on `main`.
-3. **Check every item.** Go over **all** sections/items in the files you read and mark each **pass / not-pass / N/A** in your report, so nothing is silently skipped. Tie each `not-pass` to a finding; `N/A` needs a one-word why (don't use `pass` to mean "didn't check"). If a finding doesn't map to any item, it's likely out of scope or restates an existing one — re-check before filing.
+3. **Production safety:** include the [production safety review](./general-conventions.md#production-safety-review-every-pr) on every PR, proportionate to its effects; distinguish code approval from rollout readiness and state missing evidence.
+4. **Check every item.** Go over **all** sections/items in the files you read and mark each **pass / not-pass / N/A** in your report, so nothing is silently skipped. Tie each `not-pass` to a finding; `N/A` needs a one-word why (don't use `pass` to mean "didn't check"). If a finding doesn't map to any item, it's likely out of scope or restates an existing one — re-check before filing.
 
 ## Swift / SwiftUI Conventions
 

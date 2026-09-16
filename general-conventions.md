@@ -112,8 +112,21 @@ For each signal, trace the actual reader, writer, and state owner before decidin
 3. **PR readability** — 2–3 sentences overall  
 4. **Structural improvements** — what you would do to make the PR easier to read and trust (no drive-by refactors)  
 5. **Merge confidence (standards/clarity)** — yes / medium / no  
+6. **Production safety** — code assessment and rollout assessment separately, with evidence or explicit gaps (see below)
 
 Do not change files unless explicitly asked. Report only.
+
+### Production safety review (every PR)
+
+Assess production safety on every PR, proportionate to its actual effects. For documentation-only or other changes with no production runtime or deployment effect, record **N/A** with the reason. A standards-only reviewer may reference a separate safety review; do not silently omit the assessment or imply that an unperformed review passed.
+
+- **Establish the scope.** Record the exact reviewed revision and base, intended behavior, affected environments, and non-goals. Compare against the base before filing a finding: pre-existing defects are not new PR blockers. An existing mechanism newly invoked or expanded by this PR is relevant when the change introduces additional exposure; explain that causal link. Do not turn the review into unrelated repairs or a broad redesign.
+- **Trace production effects.** Identify changes to running services, data, infrastructure, permissions, configuration, dependencies, and deployment steps. Look for unintended deletion, replacement, data loss, restarts, downtime, access changes, and incompatible migrations or shared-code regressions. Distinguish intended reversible monitoring/UI changes from changes to the production components they observe.
+- **Check operational behavior where applicable.** Detect existing installation/configuration state before changing it; make reruns deliberate, preserve unrelated configuration, and surface failures of required steps. Verify the intended result rather than treating a successful final command or a running process as sufficient. Describe recovery or rollback, including irreversible steps and any expected interruption.
+- **Require relevant evidence.** Tie checks to the reviewed revision. Use focused tests and compatibility checks; for infrastructure changes, inspect the intended environment's resource preview for unrelated drift and unintended replacements or deletions. Identify which claims require staging or live validation. Separate verified results, implementor reports, assumptions, and missing evidence. Do not invent universal requirements such as dependency pinning or new deployment machinery when the PR does not warrant them.
+- **Separate code approval from rollout approval.** Report the code assessment as **acceptable / changes required / not assessed / N/A** and rollout assessment as **ready / hold / not assessed / N/A**, with reasons. Missing rollout evidence can hold deployment without establishing a code defect or requiring unrelated changes before merge. A sign-off covers only the recorded revision, environment, and reviewed rollout scope; reassess when those change.
+
+A review request authorizes investigation, not deployment. Do not apply infrastructure changes, restart production, write production data, or execute rollback to obtain evidence without the required authorization. If evidence cannot be obtained, name the gap and the next verification step; never present a conditional or incomplete assessment as full production sign-off.
 
 ### Reproducibility / guarantees audit (a distinct review dimension)
 
