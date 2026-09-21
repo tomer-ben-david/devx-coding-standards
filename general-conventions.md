@@ -101,6 +101,7 @@ Check explicitly for:
 - guards added late in a transaction or repeated across callers instead of enforced by the structural owner
 - changes to shared owners made only to satisfy one feature or test
 - formatting churn, generated-file drift, or unrelated refactors hiding the semantic diff
+- synonym or cosmetic churn (comment rewrites, job/step renames, string renames, pure identifier renames) that does not change behavior — revert to the base wording; it only hurts PR reviewability
 - tests overfitted to one fixture, coordinate, identifier, or narrow input instead of proving the invariant
 
 For each signal, trace the actual reader, writer, and state owner before deciding. Fix a branch-introduced, goal-required defect at its owner. Remove optional machinery instead of patching its edge cases. Revert shared-owner and formatting drift that the goal does not require. Do not push until every signal is either removed or explicitly classified against the branch goal and non-goals with evidence.
