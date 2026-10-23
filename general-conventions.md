@@ -142,6 +142,7 @@ For each thing the PR claims is true after merge (engine/dependency versions, sc
 - **No Symptoms**: Do not treat symptoms (e.g., adding a null check, a catch block, or a guard clause).
 - **Fix the Root**: Find the underlying architectural reason why a failure is possible (e.g., state ownership, lifecycle mismatch, coupling) and fix it at the source.
 - **Encode Invariants**: Once fixed, encode the invariant in the type system or architecture so the failure mode becomes impossible to represent.
+- **Verify Critical Invariants Proportionately**: State the property that must hold and enforce it at its owner using types, constraints, and behavior tests. Consider property-based testing for broad input spaces, and formal verification or model checking for critical logic with a precise specification; these techniques are optional, not universal PR gates. Property-based testing is testing, not formal proof. Formal-verification claims must identify the checked property, assumptions, implementation revision, and reproducible checker result. Review the specification independently; do not weaken the intended behavior to make a proof pass.
 - **Leave it Better**: Every edit is an opportunity to improve the structure. If you find a patch, replace it with a structural fix.
 
 ## Dependency Injection
