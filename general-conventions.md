@@ -27,6 +27,7 @@ When a problem becomes too complex, the fix keeps growing (A needs B needs C...)
 - Re-ask: **"Are we assuming a path that a simpler alternative would sidestep?"**
 - Don't defend the current direction — genuinely reconsider alternatives.
 - Favor the smallest correct fix over a clever, design-heavy, or unconventional one.
+- Enforce demonstrated product and integrity requirements at the smallest shared boundary, using database triggers and other broad mechanisms only when simpler constraints or canonical operations cannot preserve those requirements.
 
 This is KISS/YAGNI enforced through *active re-thinking*, not passive compliance. Over-engineering and over-design are constant risks; the overlooked simple path is usually the right one.
 
