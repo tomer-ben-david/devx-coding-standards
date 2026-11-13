@@ -21,7 +21,7 @@ See [general-conventions.md](./general-conventions.md) for coding standards that
 
 ## UX Review Guidelines
 
-For UI changes, use [ux-review-guidelines.md](./ux-review-guidelines.md) to review the user journey, shared controls, hierarchy and rendered behavior.
+For UI changes, use [ux-review-guidelines.md](./ux-review-guidelines.md) to review the user journey, shared controls, hierarchy and rendered behavior, including [typography and readability](./ux-review-guidelines.md#typography-and-readability): one meaning per type role, readable minimum sizes, WCAG contrast and the project's existing theme tokens instead of new libraries.
 
 ## Swift / SwiftUI Conventions
 
