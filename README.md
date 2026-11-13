@@ -19,6 +19,10 @@ See [general-conventions.md](./general-conventions.md) for coding standards that
 3. **Production safety:** include the [production safety review](./general-conventions.md#production-safety-review-every-pr) on every PR, proportionate to its effects; distinguish code approval from rollout readiness and state missing evidence.
 4. **Check every item.** Go over **all** sections/items in the files you read and mark each **pass / not-pass / N/A** in your report, so nothing is silently skipped. Tie each `not-pass` to a finding; `N/A` needs a one-word why (don't use `pass` to mean "didn't check"). If a finding doesn't map to any item, it's likely out of scope or restates an existing one — re-check before filing.
 
+## UX Review Guidelines
+
+For UI changes, use [ux-review-guidelines.md](./ux-review-guidelines.md) to review the user journey, shared controls, hierarchy and rendered behavior.
+
 ## Swift / SwiftUI Conventions
 
 See [swift-conventions.md](./swift-conventions.md) for Swift and SwiftUI-specific patterns and examples. This extends the [general conventions](./general-conventions.md) with Swift-specific syntax and patterns.
