@@ -10,6 +10,8 @@ These coding conventions apply to all programming languages. The core philosophy
 
 **This is one of the rules agents violate most often.** Always favor the real best, long-term design over a quicker-to-implement short-term design. Do not pick a solution because it takes less time to write when a better long-term design exists. "Best design" is the broad framing; "structural fix over non-structural patch" is the common instance of it. When the root cause points at a structural change, implement the structural fix — e.g. page order must be rewritten into the PDF itself, not parked in a `reorder` column read instead (a second source of truth that will diverge). The same applies at the design level: prefer the design that will still be right in a year over the one that ships ten minutes sooner.
 
+Think like a senior engineer: fix the shared cause at its proper owner, and verify the broader behavior instead of special-casing the first failing example.
+
 **Ignore human-style effort estimates.** Agents routinely self-censor the best design by estimating it like a human would ("that's a big change, risky, hours of work") and then proposing a smaller, quicker design. An agent can do in minutes what a human budgets in hours. **Do not let a human-shaped effort estimate steer you away from the best long-term solution.** Judge a design by correctness, structure, and longevity — not by perceived implementation time.
 
 This is the inverse caution to #3: #3 says don't *over*-engineer; this says don't *under*-engineer into a short-term design. The deciding question is **"which design is the best long-term one?"** — implementation time is not a valid input to that decision.
@@ -27,6 +29,7 @@ When a problem becomes too complex, the fix keeps growing (A needs B needs C...)
 - Re-ask: **"Are we assuming a path that a simpler alternative would sidestep?"**
 - Don't defend the current direction — genuinely reconsider alternatives.
 - Favor the smallest correct fix over a clever, design-heavy, or unconventional one.
+- Enforce demonstrated product and integrity requirements at the smallest shared boundary, using database triggers and other broad mechanisms only when simpler constraints or canonical operations cannot preserve those requirements.
 
 This is KISS/YAGNI enforced through *active re-thinking*, not passive compliance. Over-engineering and over-design are constant risks; the overlooked simple path is usually the right one.
 
@@ -106,6 +109,14 @@ Check explicitly for:
 
 For each signal, trace the actual reader, writer, and state owner before deciding. Fix a branch-introduced, goal-required defect at its owner. Remove optional machinery instead of patching its edge cases. Revert shared-owner and formatting drift that the goal does not require. Do not push until every signal is either removed or explicitly classified against the branch goal and non-goals with evidence.
 
+### Reviewer-driven scope and complexity
+
+Treat reviewer claims and severity badges as hypotheses, not authorization. Classify each claim against the supported user flow: critical/in-scope, pre-existing, optional scope, product decision, over-engineering, or reviewer error. Require a concrete failure and evidence before repairing behavior; unsupported lifecycle, concurrency, compatibility, or flag states are not implicit requirements.
+
+Clear, readable, DRY, maintainable code, well-organized modules/folders, and sound long-term architecture are required within the changed scope. Address duplicated policy or unclear ownership structurally; do not dismiss these as cosmetic. Distinguish that quality work from unrelated redesigns, stylistic preferences, and speculative features.
+
+When a second finding appears in one family, reassess the entire chain of introduced machinery before patching again. If an optional mechanism creates the problem, cut or simplify it rather than repair every edge. Sweep supported transitions together at the existing owner. New concurrency, replay, compatibility, or persistence guarantees are product/design choices—not automatic consequences of a review badge; explain the user scenario and obtain intent before expanding them.
+
 ### Review output format
 
 1. **Findings** — P1/P2/P3, file/area, branch-introduced only  
@@ -143,6 +154,7 @@ For each thing the PR claims is true after merge (engine/dependency versions, sc
 - **No Symptoms**: Do not treat symptoms (e.g., adding a null check, a catch block, or a guard clause).
 - **Fix the Root**: Find the underlying architectural reason why a failure is possible (e.g., state ownership, lifecycle mismatch, coupling) and fix it at the source.
 - **Encode Invariants**: Once fixed, encode the invariant in the type system or architecture so the failure mode becomes impossible to represent.
+- **Verify Critical Invariants Proportionately**: State the property that must hold and enforce it at its owner using types, constraints, and behavior tests. Consider property-based testing for broad input spaces, and formal verification or model checking for critical logic with a precise specification; these techniques are optional, not universal PR gates. Property-based testing is testing, not formal proof. Formal-verification claims must identify the checked property, assumptions, implementation revision, and reproducible checker result. Review the specification independently; do not weaken the intended behavior to make a proof pass.
 - **Leave it Better**: Every edit is an opportunity to improve the structure. If you find a patch, replace it with a structural fix.
 
 ## Dependency Injection
@@ -189,7 +201,13 @@ If the dependency is truly optional (feature flag, graceful degradation), docume
 - **Extract Shared Logic**: Prefer extracting UI patterns or business logic to shared components when they appear in multiple locations to maintain a single source of truth.
 - **Avoid Duplication**: Keep an eye out for duplicate "clever" logic or magic constants and consolidate them into utilities or shared components when appropriate.
 - **Align with the codebase before designing new code.** Before designing an API, helper, middleware, error handler, logging call, or naming a concept, look at how the surrounding codebase already does it and reuse the existing utility/convention. Inventing a parallel helper, a second error shape, or a new middleware for a need the codebase already solves is a DRY violation and a second source of truth. Match existing patterns for names, module layout, and abstraction style; only introduce a new abstraction when no existing one fits.
+- **Organize folders by clear responsibilities and ownership.** Follow the repository's established domain/module boundaries so a reader can find the code and its owner without tracing scattered files. When changed code mixes unrelated responsibilities or duplicates policy across folders, refactor the affected structure: move cohesive logic to its domain owner, reuse it, and remove duplicate implementations. Choose boundaries by responsibility and dependency direction, not file length or a fixed file count. Do not create pass-through layers, generic frameworks, tiny-file fragmentation, or a whole-repository reorganization merely to make the tree look tidy.
 - **Identifiers that cross format boundaries are silent duplicates.** When a typed identifier (an enum case, `as const` key, or named constant in any language) is also emitted as a bare string inside a query or config the compiler/typechecker cannot see (SQL, PromQL, log keys, JSON, dashboard strings), DRY-in-code will not catch a drift: a rename updates the typed side and silently leaves the string, and tests asserting the old literal keep passing. Define the identifier once as a constant and interpolate it into every string (`policy="${POLICY.interactive}"`, `WHERE status = ${Status.ACTIVE}`), and prefer a type-level check that the table/mapping has exactly those keys where the language allows. A duplicated identifier the typechecker cannot reach is a second source of truth.
+
+## Public API Responses
+
+- **Return an intentional public contract, not a database row dump.** Select and project the fields needed by supported consumers. Keep useful context (such as project identity and document/page), resource identity, geometry and required revision tokens; exclude internal matching keys, extraction foreign keys and persistence bookkeeping unless they serve a documented public use. Reuse one contract owner across routes rather than duplicating field lists or serializers. Preserve meaningful nulls and capabilities; compactness must not remove functionality. Verify actual consumers before removing fields, and do not introduce generic field-selection frameworks merely to shrink JSON.
+- **Treat awkward UI and oversized responses as investigation signals.** Trace the supported user flow and existing owners: repeated navigation controls, free-text inputs for closed choices, repeated context and unexplained internal fields can reveal duplicated logic or a leaking boundary. Prefer a scoped correction at the existing owner over adding another abstraction or redesigning unrelated flows.
 
 ## Test Isolation
 
@@ -199,6 +217,7 @@ If the dependency is truly optional (feature flag, graceful degradation), docume
 
 ## Testing Philosophy
 
+- **Choose Verification Before Adding Tests**: Identify the meaningful failure modes and choose the smallest set of checks that would detect them. Add automated tests when they protect consequential behavior and provide useful regression coverage. Avoid tests that merely restate configuration, literals, layout, or implementation structure unless those details are an explicit contract. For configuration and observability changes, direct query execution, rendered inspection, schema validation, or permission review may provide stronger evidence. State what each chosen check establishes and what remains unverified. When a gap appears, reconsider the verification boundary before adding another test. This is a choice of appropriate evidence, not a blanket exemption from tests or required CI checks.
 - **Local E2E**: Prefer integration-style tests that exercise full flows (e.g., ViewModel → Service → Client) using in-memory fakes. Avoid testing implementation details; test user-facing behavior.
 - **Choose the Clearest, Most Truthful Test Boundary**: Use the test type that expresses the behavior most clearly and covers the most meaningful logic without mirroring implementation structure. Prefer a few broad scenarios that read like real use (`call API -> observe response -> read resulting state`) over many focused unit tests. When Testcontainers (or the repository's equivalent) makes that flow more readable and truthful by providing real dependencies without a separately running server, prefer it over mock-heavy unit tests or in-memory substitutes, not only for explicitly database-focused features. A real database is especially important when correctness depends on transactions, locking, concurrency, constraints, or query behavior. Reserve focused unit tests for genuinely isolated logic where they are the clearer test.
 - **Do Not Mirror Production Models in Tests**: Tests should not define parallel DTOs, schemas, summaries, or field lists that duplicate production models/read APIs. Prefer production readers/selectors and infer fixture return types from builders or seed functions so production field changes fail in one obvious place.
