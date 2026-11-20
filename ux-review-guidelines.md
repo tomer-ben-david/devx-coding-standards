@@ -3,7 +3,7 @@
 Start with the human task: what does this person know, what are they trying to accomplish, and what must they understand or decide next? Review the changed user journey, not just individual widgets. Admin tools deserve the same clarity as customer screens. Apply these checks proportionately; they are not a reason to redesign unrelated pages.
 
 1. **Task and hierarchy:** State who the screen serves and what they came to do. Make the next useful action obvious. Group related controls; keep secondary diagnostics out of the primary task flow.
-2. **Familiar controls:** Reuse existing navigation, components and behavior. Offer previous/next and return navigation where users expect them. Use a select for a known set of choices instead of requiring users to remember and type values.
+2. **Familiar controls:** Reuse existing navigation, components and behavior. Use a leading Back arrow to return to the previous view and a trailing × in a panel header to dismiss that panel. Keep each icon reachable at narrow widths and give it a tooltip and accessible name describing its destination or scope. Use a select for a known set of choices instead of requiring users to remember and type values.
 3. **Context and effort:** Carry known project/document/page context from the entry point. Avoid asking users to reselect it or perform redundant loading steps. Show the active scope clearly.
 4. **Space and polish:** Give the working content adequate space. Remove redundant headings and stacked toolbars; use consistent spacing, typography and action emphasis. Compact does not mean tiny controls or unreadable text. Apply [Typography and Readability](#typography-and-readability).
 5. **Truthful interaction:** Check that navigation changes displayed content, selection matches subsequent actions, and loading/error/empty/success states explain what happened and what to do next. Distinguish destructive actions clearly.
@@ -38,6 +38,7 @@ For each meaningful step, ask: does the person understand what to accomplish, no
 
 These human-centered review rules draw on Google's design-review guidance. They do not prescribe a visual framework or claim Google approval:
 
+- [Apple Human Interface Guidelines on toolbar navigation and placement](https://developer.apple.com/design/human-interface-guidelines/toolbars)
 - [Google Design: Design Reviews — Going Beyond the Surface](https://design.google/library/reviewing-the-design-review): review the problem, information hierarchy, familiar patterns and the implemented experience.
 
 - [NN/G: Cognitive walkthroughs](https://www.nngroup.com/articles/cognitive-walkthroughs/): evaluate whether a newcomer can discover and understand each task step; distinguish inspection from user testing.
